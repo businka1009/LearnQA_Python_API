@@ -1,4 +1,5 @@
 from types import GeneratorType
+from time import sleep
 
 import requests
 from lib.base_case import BaseCase
@@ -69,10 +70,22 @@ class TestUserEdit(BaseCase):
 
 
     def test_edit_another_user(self):
+        # REGISTER
+        sleep(1)
+        register_data = self.prepare_registration_data()
+        response1 = requests.post('https://playground.learnqa.ru/api/user/', data=register_data)
+
+        Assertions.assert_code_status(response1, 200)
+        Assertions.assert_json_has_key(response1, 'id')
+
+        email = register_data['email']
+        password = register_data['password']
+
+
         # LOGIN
         login_data = {
-            'email' : 'vinkotov@example.com',
-            'password' : '1234'
+            'email' : email,
+            'password' : password
         }
 
         response2 = requests.post("https://playground.learnqa.ru/api/user/login", data=login_data)
@@ -89,8 +102,8 @@ class TestUserEdit(BaseCase):
 
         Assertions.assert_code_status(response3, 400)
         assert response3.content.decode(
-            "utf-8") == '{"error":"Please, do not edit test users with ID 1, 2, 3, 4 or 5."}', \
-            f"Unexpected response content {response3.content}"
+            "utf-8") == '{"error":"This user can only edit their own data."}', f"Unexpected response content {response3.content}"
+
 
 
     def test_edit_incorrect_email_user(self):
